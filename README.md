@@ -15,7 +15,7 @@
 
 * MIK32 / ELBEAR
 * BNO055 I2C
-* OLED 1.3" SPI
+* OLED 0.96" SPI (MSP096X)
 * 1 кнопка
 * провода / макетная плата
 
