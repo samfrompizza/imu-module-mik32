@@ -4,9 +4,9 @@
 #include "mik32_hal_dma.h"
 #include "string.h"
 #include "stdlib.h"
-#include "queue.h"
-#include "circular_buffer.h"
-#include "app_types.h"
+#include "app/queue.h"
+#include "app/circular_buffer.h"
+#include "app/app_types.h"
 
 #define LED_PIN_NUM (7)
 #define LED_PIN_PORT (GPIO_2)
