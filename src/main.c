@@ -2,25 +2,35 @@
 #include "mik32_hal_i2c.h"
 #include "mik32_hal_irq.h"
 #include "mik32_hal_dma.h"
+#include "mik32_hal_gpio.h"
+#include "mik32_hal_spi.h"
 #include "string.h"
 #include "stdlib.h"
 #include "app/queue.h"
 #include "app/circular_buffer.h"
 #include "app/app_types.h"
+#include "mik32_hal.h"
+#include "drivers/oled_ssd1306.h"
 
 static void SystemClock_Config();
 static void USART_Init();
 static void GPIO_Init();
+static void spi_init();
+
+USART_HandleTypeDef husart0;
+SPI_HandleTypeDef hspi0;
 
 int main()
 {
     SystemClock_Config();
     GPIO_Init();
     USART_Init();
+    spi_init();
+    oled_init(&hspi0);
 
     while (1)
     {
-
+        oled_test_screen();
     }
 }
 
@@ -51,6 +61,21 @@ void GPIO_Init()
 
     /**< Включить  тактирование схемы формирования прерываний GPIO */
     PM->CLK_APB_P_SET |= PM_CLOCK_APB_P_GPIO_IRQ_M;
+
+    GPIO_InitTypeDef gpio = {0};
+
+    gpio.Pin = OLED_DC_PIN;
+    gpio.Mode = HAL_GPIO_MODE_GPIO_OUTPUT;
+
+    HAL_GPIO_Init(OLED_DC_PORT, &gpio);
+
+    gpio.Pin = OLED_RES_PIN;
+    HAL_GPIO_Init(OLED_RES_PORT, &gpio);
+
+    gpio.Pin = OLED_CS_PIN;
+    HAL_GPIO_Init(OLED_CS_PORT, &gpio);
+
+    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_HIGH);
 }
 
 void USART_Init()
@@ -96,4 +121,18 @@ void USART_Init()
     husart0.dma_rx_request = Disable;
 
     HAL_USART_Init(&husart0);
+}
+
+static void spi_init()
+{
+    hspi0.Instance = SPI_0;
+
+    hspi0.Init.SPI_Mode = HAL_SPI_MODE_MASTER;
+
+    hspi0.Init.CLKPhase = SPI_PHASE_ON;
+    hspi0.Init.CLKPolarity = SPI_POLARITY_LOW;
+
+    hspi0.Init.BaudRateDiv = SPI_BAUDRATE_DIV32;
+
+    HAL_SPI_Init(&hspi0);
 }
