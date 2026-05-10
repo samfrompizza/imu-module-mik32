@@ -60,8 +60,7 @@ void trap_handler()
     {
         if (HAL_USART_RXNE_ReadFlag(&husart0))
         {
-            HAL_USART_RXNE_ClearFlag(&husart0);
-            ByteCircularBuffer_PushFromISR(rx_buffer, HAL_USART_ReadByte(&husart0));
+
         }
 
         HAL_USART_ClearFlags(&husart0);
