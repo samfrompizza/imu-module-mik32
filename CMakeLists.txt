@@ -6,4 +6,4 @@ project(base_project VERSION 0.1)
 enable_language(C CXX ASM)
 
 add_subdirectory(hardware)
-add_subdirectory(app)
+add_subdirectory(src)

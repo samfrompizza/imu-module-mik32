@@ -3,9 +3,6 @@ set(APP_NAME ${CMAKE_PROJECT_NAME})
 
 add_executable(${APP_NAME}
     main.c
-    lcd_driver.c
-    dht11.c
-    custom_format.c
 )
 
 target_include_directories(${APP_NAME} PUBLIC
