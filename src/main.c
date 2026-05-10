@@ -8,65 +8,20 @@
 #include "app/circular_buffer.h"
 #include "app/app_types.h"
 
-#define LED_PIN_NUM (7)
-#define LED_PIN_PORT (GPIO_2)
-#define TOGGLE_ONBOARD_LED (LED_PIN_PORT->OUTPUT ^= (1 << LED_PIN_NUM))
-#define BYTES_EXPECTED_TO_RECIEVE 9
-
 static void SystemClock_Config();
 static void USART_Init();
 static void GPIO_Init();
-static void DMA_Init(void);
-
-static void configure_interrupts();
-static void configure_mem_to_mem_dma(DMA_InitTypeDef *, DMA_ChannelHandleTypeDef *);
-static void configure_mem_to_uart_dma(DMA_InitTypeDef *, DMA_ChannelHandleTypeDef *);
-static void transfer_data_from_dst_mem(DMA_ChannelHandleTypeDef *, USART_HandleTypeDef *, ByteArray *);
-
-USART_HandleTypeDef husart0;
-DMA_InitTypeDef hdma;
-DMA_ChannelHandleTypeDef hdma_ch_mem_to_mem;
-DMA_ChannelHandleTypeDef hdma_ch_mem_to_uart;
-
-static ByteArrayQueue tx_queue;
-static ByteCircularBuffer rx_buffer;
-
-static volatile ByteArray ba;
-
 
 int main()
 {
     SystemClock_Config();
     GPIO_Init();
-    DMA_Init();
     USART_Init();
-
-    tx_queue = Queue_Create(16);
-    rx_buffer = ByteCircularBuffer_Create(128);
-
-    configure_interrupts();
-    configure_mem_to_mem_dma(&hdma, &hdma_ch_mem_to_mem);
-    configure_mem_to_uart_dma(&hdma, &hdma_ch_mem_to_uart);
 
     while (1)
     {
 
     }
-}
-
-void trap_handler()
-{
-    if (EPIC_CHECK_UART_0())
-    {
-        if (HAL_USART_RXNE_ReadFlag(&husart0))
-        {
-
-        }
-
-        HAL_USART_ClearFlags(&husart0);
-    }
-
-    HAL_EPIC_Clear(0xFFFFFFFF);
 }
 
 void SystemClock_Config(void)
@@ -89,36 +44,13 @@ void SystemClock_Config(void)
 
 void GPIO_Init()
 {
-    /**< Включить  тактирование GPIO_0 */
+    /**< Включить  тактирование GPIO */
     PM->CLK_APB_P_SET |= PM_CLOCK_APB_P_GPIO_0_M;
-
-    /**< Включить  тактирование GPIO_1 */
     PM->CLK_APB_P_SET |= PM_CLOCK_APB_P_GPIO_1_M;
-
-    /**< Включить  тактирование GPIO_2 */
     PM->CLK_APB_P_SET |= PM_CLOCK_APB_P_GPIO_2_M;
 
     /**< Включить  тактирование схемы формирования прерываний GPIO */
     PM->CLK_APB_P_SET |= PM_CLOCK_APB_P_GPIO_IRQ_M;
-
-    // первая функция (порт общего назначения);
-    PAD_CONFIG->PORT_0_CFG |= 0 << (LED_PIN_NUM * 2);
-
-    // нагрузочная способность 2 мА;
-    PAD_CONFIG->PORT_0_DS |= 0 << (LED_PIN_NUM * 2);
-
-    // резисторы подтяжки отключены
-    PAD_CONFIG->PORT_0_PUPD |= 0 << (LED_PIN_NUM * 2);
-
-    // Установка направления выводов как выход.
-    GPIO_2->DIRECTION_OUT = 1 << LED_PIN_NUM;
-}
-
-void DMA_Init(void)
-{
-    hdma.Instance = DMA_CONFIG;
-    hdma.CurrentValue = DMA_CURRENT_VALUE_ENABLE;
-    HAL_DMA_Init(&hdma);
 }
 
 void USART_Init()
@@ -164,63 +96,4 @@ void USART_Init()
     husart0.dma_rx_request = Disable;
 
     HAL_USART_Init(&husart0);
-}
-
-void configure_interrupts()
-{
-    __HAL_PCC_EPIC_CLK_ENABLE();
-    HAL_EPIC_MaskLevelSet(HAL_EPIC_UART_0_MASK);
-    HAL_USART_RXNE_EnableInterrupt(&husart0);
-    HAL_IRQ_EnableInterrupts();
-}
-
-void configure_mem_to_mem_dma(DMA_InitTypeDef *hdma, DMA_ChannelHandleTypeDef *ch)
-{
-    ch->dma = hdma;
-
-    /* Настройки канала */
-    ch->ChannelInit.Channel = DMA_CHANNEL_1;
-    ch->ChannelInit.Priority = DMA_CHANNEL_PRIORITY_VERY_HIGH;
-
-    ch->ChannelInit.ReadMode = DMA_CHANNEL_MODE_MEMORY;
-    ch->ChannelInit.ReadInc = DMA_CHANNEL_INC_ENABLE;
-    ch->ChannelInit.ReadSize = DMA_CHANNEL_SIZE_BYTE; /* data_len должно быть кратно read_size */
-    ch->ChannelInit.ReadBurstSize = 0;                /* read_burst_size должно быть кратно read_size */
-    ch->ChannelInit.ReadRequest = 0;                  // DMA_CHANNEL_USART_0_REQUEST;
-    ch->ChannelInit.ReadAck = DMA_CHANNEL_ACK_DISABLE;
-
-    ch->ChannelInit.WriteMode = DMA_CHANNEL_MODE_MEMORY;
-    ch->ChannelInit.WriteInc = DMA_CHANNEL_INC_ENABLE;
-    ch->ChannelInit.WriteSize = DMA_CHANNEL_SIZE_BYTE; /* data_len должно быть кратно write_size */
-    ch->ChannelInit.WriteBurstSize = 0;                /* write_burst_size должно быть кратно read_size */
-    ch->ChannelInit.WriteRequest = 0;                  // DMA_CHANNEL_USART_0_REQUEST;
-    ch->ChannelInit.WriteAck = DMA_CHANNEL_ACK_ENABLE;
-}
-
-void configure_mem_to_uart_dma(DMA_InitTypeDef *hdma, DMA_ChannelHandleTypeDef *ch)
-{
-    ch->dma = hdma;
-
-    /* Настройки канала */
-    ch->ChannelInit.Channel = DMA_CHANNEL_0;
-    ch->ChannelInit.Priority = DMA_CHANNEL_PRIORITY_VERY_HIGH;
-
-    ch->ChannelInit.ReadMode = DMA_CHANNEL_MODE_MEMORY;
-    ch->ChannelInit.ReadInc = DMA_CHANNEL_INC_ENABLE;
-    ch->ChannelInit.ReadSize = DMA_CHANNEL_SIZE_BYTE; /* data_len должно быть кратно read_size */
-    ch->ChannelInit.ReadBurstSize = 0;                /* read_burst_size должно быть кратно read_size */
-    ch->ChannelInit.ReadRequest = DMA_CHANNEL_USART_0_REQUEST;
-    ch->ChannelInit.ReadAck = DMA_CHANNEL_ACK_DISABLE;
-
-    ch->ChannelInit.WriteMode = DMA_CHANNEL_MODE_PERIPHERY;
-    ch->ChannelInit.WriteInc = DMA_CHANNEL_INC_DISABLE;
-    ch->ChannelInit.WriteSize = DMA_CHANNEL_SIZE_BYTE; /* data_len должно быть кратно write_size */
-    ch->ChannelInit.WriteBurstSize = 0;                /* write_burst_size должно быть кратно read_size */
-    ch->ChannelInit.WriteRequest = DMA_CHANNEL_USART_0_REQUEST;
-    ch->ChannelInit.WriteAck = DMA_CHANNEL_ACK_ENABLE;
-}
-
-void transfer_data_from_dst_mem(DMA_ChannelHandleTypeDef *hdma_ch, USART_HandleTypeDef *huart, ByteArray *dst_mem)
-{
-    HAL_DMA_Start(hdma_ch, dst_mem->byteArray, (void *)&huart->Instance->TXDATA, dst_mem->length - 1);
 }
