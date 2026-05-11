@@ -38,14 +38,14 @@ monitor:
 	picocom $(SERIAL_PORT) -b $(SERIAL_BOUDRATE) --omap crcrlf --echo
 
 size_analyze_html: build_app
-	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -Ha --rom -W $(BUILD_DIR)/app/base_project.elf > size-analyze-rom.html
-	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -Ha --ram -W $(BUILD_DIR)/app/base_project.elf > size-analyze-ram.html
+	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -Ha --rom -W $(BUILD_DIR)/src/base_project.elf > size-analyze-rom.html
+	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -Ha --ram -W $(BUILD_DIR)/src/base_project.elf > size-analyze-ram.html
 
 size_analyze_rom: build_app
-	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -w 120 -Ha --rom $(BUILD_DIR)/app/base_project.elf
+	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -w 120 -Ha --rom $(BUILD_DIR)/src/base_project.elf
 
 size_analyze_ram: build_app
-	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -w 120 -Ha --ram $(BUILD_DIR)/app/base_project.elf
+	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -w 120 -Ha --ram $(BUILD_DIR)/src/base_project.elf
 
 size_analyze_sections: build_app
-	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -w 120 -Ha -P $(BUILD_DIR)/app/base_project.elf
+	elf-size-analyze -t $(MIK32_TOOLCHAIN_DIR)/riscv-none-elf- -w 120 -Ha -P $(BUILD_DIR)/src/base_project.elf

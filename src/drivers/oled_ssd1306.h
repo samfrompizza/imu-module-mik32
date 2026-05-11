@@ -16,15 +16,15 @@ extern uint8_t oled_buffer[OLED_BUF_SIZE];
 
 void oled_init(SPI_HandleTypeDef *hspi);
 
-void oled_clear(void);
-void oled_fill(void);
+void oled_clear();
+void oled_fill();
 
-void oled_update(void);
+void oled_update();
 
 void oled_draw_pixel(uint8_t x, uint8_t y, bool color);
 
 void oled_draw_bitmap_8x8(uint8_t x, uint8_t y, const uint8_t *bitmap);
 
-void oled_test_screen(void);
+void oled_test_screen();
 
 #endif

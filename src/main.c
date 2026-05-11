@@ -30,7 +30,15 @@ int main()
 
     while (1)
     {
-        oled_test_screen();
+        HAL_GPIO_WritePin(OLED_CS_PORT, 1 << OLED_CS_PIN, GPIO_PIN_HIGH);
+        HAL_GPIO_WritePin(OLED_DC_PORT, 1 << OLED_DC_PIN, GPIO_PIN_LOW);
+        HAL_GPIO_WritePin(OLED_RES_PORT, 1 << OLED_RES_PIN, GPIO_PIN_HIGH);
+        HAL_DelayMs(5000);
+
+        HAL_GPIO_WritePin(OLED_CS_PORT, 1 << OLED_CS_PIN, GPIO_PIN_LOW);
+        HAL_GPIO_WritePin(OLED_DC_PORT, 1 << OLED_DC_PIN, GPIO_PIN_HIGH);
+        HAL_GPIO_WritePin(OLED_RES_PORT, 1 << OLED_RES_PIN, GPIO_PIN_LOW);
+        HAL_DelayMs(5000);
     }
 }
 
@@ -62,20 +70,25 @@ void GPIO_Init()
     /**< Включить  тактирование схемы формирования прерываний GPIO */
     PM->CLK_APB_P_SET |= PM_CLOCK_APB_P_GPIO_IRQ_M;
 
-    GPIO_InitTypeDef gpio = {0};
+    PAD_CONFIG->PORT_0_CFG |= 0 << (OLED_DC_PIN * 2);
+    PAD_CONFIG->PORT_0_DS |= 0 << (OLED_DC_PIN * 2);
+    PAD_CONFIG->PORT_0_PUPD |= 0 << (OLED_DC_PIN * 2);
 
-    gpio.Pin = OLED_DC_PIN;
-    gpio.Mode = HAL_GPIO_MODE_GPIO_OUTPUT;
+    PAD_CONFIG->PORT_0_CFG |= 0 << (OLED_RES_PIN * 2);
+    PAD_CONFIG->PORT_0_DS |= 0 << (OLED_RES_PIN * 2);
+    PAD_CONFIG->PORT_0_PUPD |= 0 << (OLED_RES_PIN * 2);
 
-    HAL_GPIO_Init(OLED_DC_PORT, &gpio);
+    PAD_CONFIG->PORT_1_CFG |= 0 << (OLED_CS_PIN * 2);
+    PAD_CONFIG->PORT_1_DS |= 0 << (OLED_CS_PIN * 2);
+    PAD_CONFIG->PORT_1_PUPD |= 0 << (OLED_CS_PIN * 2);
 
-    gpio.Pin = OLED_RES_PIN;
-    HAL_GPIO_Init(OLED_RES_PORT, &gpio);
+    GPIO_0->DIRECTION_OUT |= 1 << OLED_DC_PIN;
+    GPIO_0->DIRECTION_OUT |= 1 << OLED_DC_PIN;
+    GPIO_1->DIRECTION_OUT |= 1 << OLED_CS_PIN;
 
-    gpio.Pin = OLED_CS_PIN;
-    HAL_GPIO_Init(OLED_CS_PORT, &gpio);
-
-    HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_HIGH);
+    HAL_GPIO_WritePin(OLED_CS_PORT, 1 << OLED_CS_PIN, GPIO_PIN_HIGH);
+    HAL_GPIO_WritePin(OLED_DC_PORT, 1 << OLED_DC_PIN, GPIO_PIN_LOW);
+    HAL_GPIO_WritePin(OLED_RES_PORT, 1 << OLED_RES_PIN, GPIO_PIN_HIGH);
 }
 
 void USART_Init()
@@ -125,10 +138,9 @@ void USART_Init()
 
 static void spi_init()
 {
+    PM->CLK_APB_M_SET |= PM_CLOCK_APB_P_SPI_0_M;
     hspi0.Instance = SPI_0;
-
     hspi0.Init.SPI_Mode = HAL_SPI_MODE_MASTER;
-
     hspi0.Init.CLKPhase = SPI_PHASE_ON;
     hspi0.Init.CLKPolarity = SPI_POLARITY_LOW;
 

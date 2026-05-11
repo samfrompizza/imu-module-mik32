@@ -11,34 +11,34 @@ static SPI_HandleTypeDef *oled_spi;
 
 uint8_t oled_buffer[OLED_BUF_SIZE];
 
-static inline void cs_low(void)
+static inline void cs_low()
 {
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_LOW);
+  HAL_GPIO_WritePin(OLED_CS_PORT, 1 << OLED_CS_PIN, GPIO_PIN_LOW);
 }
 
-static inline void cs_high(void)
+static inline void cs_high()
 {
-  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_HIGH);
+  HAL_GPIO_WritePin(OLED_CS_PORT, 1 << OLED_CS_PIN, GPIO_PIN_HIGH);
 }
 
-static inline void dc_low(void)
+static inline void dc_low()
 {
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_LOW);
+  HAL_GPIO_WritePin(OLED_DC_PORT, 1 << OLED_DC_PIN, GPIO_PIN_LOW);
 }
 
-static inline void dc_high(void)
+static inline void dc_high()
 {
-  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_HIGH);
+  HAL_GPIO_WritePin(OLED_DC_PORT, 1 << OLED_DC_PIN, GPIO_PIN_HIGH);
 }
 
-static inline void rst_low(void)
+static inline void rst_low()
 {
-  HAL_GPIO_WritePin(OLED_RES_PORT, OLED_RES_PIN, GPIO_PIN_LOW);
+  HAL_GPIO_WritePin(OLED_RES_PORT, 1 << OLED_RES_PIN, GPIO_PIN_LOW);
 }
 
-static inline void rst_high(void)
+static inline void rst_high()
 {
-  HAL_GPIO_WritePin(OLED_RES_PORT, OLED_RES_PIN, GPIO_PIN_HIGH);
+  HAL_GPIO_WritePin(OLED_RES_PORT, 1 << OLED_RES_PIN, GPIO_PIN_HIGH);
 }
 
 static void oled_write_cmd(uint8_t cmd)
@@ -57,7 +57,7 @@ static void oled_write_data(uint8_t *data, uint16_t size)
   cs_high();
 }
 
-static void oled_reset(void)
+static void oled_reset()
 {
   rst_low();
   HAL_DelayMs(10);
@@ -66,12 +66,12 @@ static void oled_reset(void)
   HAL_DelayMs(10);
 }
 
-void oled_clear(void)
+void oled_clear()
 {
   memset(oled_buffer, 0x00, OLED_BUF_SIZE);
 }
 
-void oled_fill(void)
+void oled_fill()
 {
   memset(oled_buffer, 0xFF, OLED_BUF_SIZE);
 }
@@ -103,7 +103,7 @@ void oled_draw_bitmap_8x8(uint8_t x, uint8_t y, const uint8_t *bitmap)
   }
 }
 
-void oled_update(void)
+void oled_update()
 {
   for (uint8_t page = 0; page < 8; page++)
   {
@@ -175,7 +175,7 @@ void oled_init(SPI_HandleTypeDef *hspi)
   oled_update();
 }
 
-void oled_test_screen(void)
+void oled_test_screen()
 {
   oled_clear();
 
