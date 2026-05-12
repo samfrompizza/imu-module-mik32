@@ -1,122 +1,110 @@
-OUTPUT_ARCH("riscv")
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv", "elf32-littleriscv")
+OUTPUT_ARCH(riscv)
+
+ENTRY(_start)
 
 
-ENTRY(_enter)
-
-MEMORY
-{
-    ram (RWX) : ORIGIN = 0x02000000, LENGTH = 16K /* Internal 16 Kb SRAM*/
-    rom (RX) :ORIGIN = 0x01000000, LENGTH = 8K /* Internal eeprom 8 Kb */
+MEMORY {
+  spifi (RX): ORIGIN = 0x80000000, LENGTH = 2*1024M
+  ram (RWX): ORIGIN = 0x02000000, LENGTH = 16K
 }
 
-SECTIONS
-{
+STACK_SIZE = 1024;
 
+CL_SIZE = 16;
 
-    /* ROM SECTION
-     *
-     * The following sections contain data which lives in read-only memory, if
-     * such memory is present in the design, for the entire duration of program
-     * execution.
-     */
+REGION_ALIAS("REGION_TEXT", spifi);
+REGION_ALIAS("REGION_RAM", ram);
 
-    .text : {
+SECTIONS {
+    .text ORIGIN(REGION_TEXT) : {
         PROVIDE(__TEXT_START__ = .);
-        KEEP(*(.text.init.enter ))
-        . = __TEXT_START__ + 0xC0;
-        KEEP(*(.text.trap_handler))
+        *crt.S.o(.text .text.*)
+        *(.text.smallsysteminit)
+        *(.text.SmallSystemInit)
+        . = ORIGIN(REGION_TEXT) + 0xC0;
+        KEEP(*crt.S.o(.trap_text))
+
         *(.text)
         *(.text.*)
-        *(.gnu.linkonce.t.*)
+        *(.rodata)
+        *(.rodata.*)      
+        . = ALIGN(CL_SIZE);
         PROVIDE(__TEXT_END__ = .);
-    } >rom
+    } >REGION_TEXT 
 
-    .fini (READONLY): {
-        KEEP (*(SORT_NONE(.fini)))
-    } >rom
-
-    .preinit_array (READONLY): ALIGN(4) {
-        PROVIDE_HIDDEN (__preinit_array_start = .);
-        KEEP (*(.preinit_array))
-        PROVIDE_HIDDEN (__preinit_array_end = .);
-    } >rom
-
-    .init_array (READONLY): ALIGN(4) {
-        PROVIDE_HIDDEN (__init_array_start = .);
-        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
-        KEEP (*(.init_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
-        PROVIDE_HIDDEN (__init_array_end = .);
-    } >rom
-
-    .fini_array (READONLY): ALIGN(4) {
-        PROVIDE_HIDDEN (__fini_array_start = .);
-        KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
-        KEEP (*(.fini_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
-        PROVIDE_HIDDEN (__fini_array_end = .);
-    } >rom
-
-    .rodata (READONLY) : {
-        *(.rdata)
-        *(.rodata .rodata.*)
-        *(.gnu.linkonce.r.*)
-    } >rom
-
-    /* TEXT SECTION
-     *
-     * The following section contains the code of the program, excluding
-     * everything that's been allocated into the ITIM/LIM already
-     */
-
-
-
-    /* RAM SECTION
-     *
-     * The following sections contain data which is copied from read-only
-     * memory into a RAM memory
-     */
-     
-
-    .data : ALIGN(4) {
-        PROVIDE(__data_start = .);
+    .data : 
+    AT( __TEXT_END__ ) {
+        PROVIDE(__DATA_START__ = .);
+        _gp = .;
+        *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2) *(.srodata*)
+        *(.sdata .sdata.* .gnu.linkonce.s.*)
         *(.data .data.*)
-        *(.gnu.linkonce.d.*)
-        . = ALIGN(4);
-        /*__global_pointer$ - 12bit offset from start of .sdata section, used for Linker Relaxation. 
-          Should be written to the gp register
-        */
-        PROVIDE( __global_pointer = . + 0x800 );
-        *(.srodata.cst16)
-        *(.srodata.cst8)
-        *(.srodata.cst4)
-        *(.srodata.cst2)
-        *(.srodata .srodata.*)
-        *(.sdata .sdata.* .sdata2.*)
-        *(.gnu.linkonce.s.*)
-        PROVIDE(__data_end = .);
-    } >ram AT>rom 
+        . = ALIGN(CL_SIZE);
+        PROVIDE(__DATA_END__ = .);
+    } >REGION_RAM
+    
+    __DATA_IMAGE_START__ = LOADADDR(.data);
+    __DATA_IMAGE_END__ = LOADADDR(.data) + SIZEOF(.data);
 
-    PROVIDE( __data_source_start = LOADADDR(.data) );
-    PROVIDE( __data_target_start = ADDR(.data) );
-    PROVIDE( __data_target_end = ADDR(.data) + SIZEOF(.data) );
+    /* thread-local data segment */
+    .tdata : {
+        PROVIDE(_tls_data = .);
+        PROVIDE(_tdata_begin = .);
+        *(.tdata .tdata.*)
+        PROVIDE(_tdata_end = .);
+        . = ALIGN(CL_SIZE);
+    } >REGION_RAM
 
+    .tbss : {
+        PROVIDE(__BSS_START__ = .);
+        *(.tbss .tbss.*)
+        . = ALIGN(CL_SIZE);
+        PROVIDE(_tbss_end = .);
+    } >REGION_RAM
 
-    .bss (NOLOAD): ALIGN(4) {
-        __bss_start = .;
-        *(.sbss*) /* Must be located immediately after the .sdata section */
-        *(.gnu.linkonce.sb.*)
+    /* bss segment */
+    .sbss : {
+        *(.sbss .sbss.* .gnu.linkonce.sb.*)
+        *(.scommon)
+    } >REGION_RAM
+
+    .bss : {
         *(.bss .bss.*)
-        *(.gnu.linkonce.b.*)
         *(COMMON)
-        __bss_end = .;
-    } >ram 
+        . = ALIGN(CL_SIZE);
+        PROVIDE(__BSS_END__ = .);
+    } >REGION_RAM
 
-    __stack_size = DEFINED(__stack_size) ? __stack_size : 1024;
-    PROVIDE(__stack_size = __stack_size);
+    /* Code intended to be copied to REGION_RAM before execution */
+    .ram_text : 
+    AT( ALIGN(__DATA_IMAGE_END__, CL_SIZE) ) {
+        PROVIDE(__RAM_TEXT_START__ = .);
+        *(.ram_text)
+        . = ALIGN(CL_SIZE);
+        PROVIDE(__RAM_TEXT_END__ = .);
+    } > REGION_RAM
+    
+    __RAM_TEXT_IMAGE_START__ = LOADADDR(.ram_text);
+    __RAM_TEXT_IMAGE_END__ = LOADADDR(.ram_text) + SIZEOF(.ram_text);
+    ASSERT(__RAM_TEXT_IMAGE_END__ < ORIGIN(REGION_TEXT) + LENGTH(REGION_TEXT), "REGION_TEXT segment overflows")
 
-    .stack ORIGIN(ram) + LENGTH(ram) - __stack_size :ALIGN(16)
-    {
-      . = __stack_size;
-      PROVIDE( __sp = . );
-    } >ram 
+    ASSERT(__RAM_TEXT_END__ < ORIGIN(REGION_RAM) + LENGTH(REGION_RAM) - STACK_SIZE, "REGION_RAM section overflows")
+
+    _end = .;
+    PROVIDE(__end = .);
+
+    /* End of uninitalized data segement */
+
+    .stack ORIGIN(REGION_RAM) + LENGTH(REGION_RAM) - STACK_SIZE : {
+        FILL(0);
+        PROVIDE(__STACK_START__ = .);
+        . += STACK_SIZE;
+        PROVIDE(__C_STACK_TOP__ = .);
+        PROVIDE(__STACK_END__ = .);
+    } >REGION_RAM
+
+    /DISCARD/ : {
+        *(.eh_frame .eh_frame.*)
+    }
 }

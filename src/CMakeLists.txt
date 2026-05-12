@@ -3,6 +3,9 @@ set(APP_NAME ${CMAKE_PROJECT_NAME})
 
 add_executable(${APP_NAME}
     main.c
+    crt.S
+    #startup.c
+    #${CMAKE_SOURCE_DIR}/hardware/mik32v2-shared/runtime/crt0.S
 )
 
 target_include_directories(${APP_NAME} PUBLIC

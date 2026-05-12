@@ -27,6 +27,11 @@ static DMA_InitTypeDef dma_init_struct = {0};
 
 int main() {
     SystemClock_Config();
+    GPIO_Init();
+
+    HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_HIGH);
+    HAL_DelayMs(1000);
+    HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_LOW);
 
     spi.Instance = SPI_PORT;
     
@@ -46,9 +51,11 @@ int main() {
 
     ssd1306_Init(&display, 10);
     ssd1306_Fill(&display, White);
-    ssd1306_FillRectangle(&display, 0, 0, 10, 10, Black);
-    ssd1306_UpdateScreen(&display);
 
+    while (1) {
+        ssd1306_FillRectangle(&display, 0, 0, 50, 50, Black);
+        ssd1306_UpdateScreen(&display);
+    }
     
     return 0;
 }
@@ -91,9 +98,17 @@ static void DMA_Init(void) {
 }
 
 static void GPIO_Init() {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
     __HAL_PCC_GPIO_0_CLK_ENABLE();
     __HAL_PCC_GPIO_1_CLK_ENABLE();
     __HAL_PCC_GPIO_2_CLK_ENABLE();
+    __HAL_PCC_GPIO_IRQ_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin = GPIO_PIN_7;
+    GPIO_InitStruct.Mode = HAL_GPIO_MODE_GPIO_OUTPUT;
+    GPIO_InitStruct.Pull = HAL_GPIO_PULL_NONE;
+    HAL_GPIO_Init(GPIO_2, &GPIO_InitStruct);
 }
 
 static void SystemClock_Config() {
