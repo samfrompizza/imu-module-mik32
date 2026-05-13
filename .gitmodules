@@ -5,3 +5,6 @@
 	path = hardware/mik32-hal
 	url = https://github.com/su-mt/mik32-hal.git
 	branch = main
+[submodule "lib/BNO055_SensorAPI"]
+	path = lib/BNO055_SensorAPI
+	url = https://github.com/boschsensortec/BNO055_SensorAPI.git

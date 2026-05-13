@@ -8,13 +8,14 @@
 #include "mik32_memory_map.h"
 #include "scr1_timer.h"
 #include "drivers/board_config.h"
-
+#include "../hardware/mik32-hal/utilities/Include/mik32_hal_ssd1306_fonts.h"
 
 static void SystemClock_Config();
 static void GPIO_Init();
-static void I2C_Init(void);
-void SPI_Init ();
-static void DMA_Init(void);
+static void I2C_Init();
+void SPI_Init(SPI_HandleTypeDef *spi);
+static void DMA_Init();
+void display_Init();
 
 SPI_HandleTypeDef spi;
 I2C_HandleTypeDef hi2c;
@@ -28,13 +29,27 @@ static DMA_InitTypeDef dma_init_struct = {0};
 int main() {
     SystemClock_Config();
     GPIO_Init();
+    I2C_Init();
+    display_Init();
+    DMA_Init();
+    SPI_Init(&spi);
+    display.hdmatx = &hdma_spi_tx;  // Link DMA channel to display handle
 
-    HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_HIGH);
-    HAL_DelayMs(1000);
-    HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_LOW);
+    ssd1306_Init(&display, 10);
+    ssd1306_Fill(&display, Black);
 
+    while (1) {
+        char str[] = "abobus  ";
+        ssd1306_WriteString(&display, str, Font_16x24, White);
+        ssd1306_UpdateScreen(&display);
+    }
+
+    return 0;
+}
+
+void display_Init() {
     spi.Instance = SPI_PORT;
-    
+
     display.Init.Interface = HAL_SPI;
     display.Init.Spi = &spi;
     display.Init.SSD1306_DC_Port = OLED_DC_PORT;
@@ -43,21 +58,6 @@ int main() {
     display.Init.SSD1306_Reset_Pin = OLED_RES_PIN;
     display.Init.SSD1306_CS_Port = OLED_CS_PORT;
     display.Init.SSD1306_CS_Pin = OLED_CS_PIN;
-      
-    DMA_Init();
-    SPI_Init(&spi);
-    display.hdmatx = &hdma_spi_tx;  // Link DMA channel to display handle
-
-
-    ssd1306_Init(&display, 10);
-    ssd1306_Fill(&display, White);
-
-    while (1) {
-        ssd1306_FillRectangle(&display, 0, 0, 50, 50, Black);
-        ssd1306_UpdateScreen(&display);
-    }
-    
-    return 0;
 }
 
 void SPI_Init(SPI_HandleTypeDef *spi) {
@@ -129,8 +129,7 @@ static void SystemClock_Config() {
     HAL_PCC_Config(&PCC_OscInit);
 }
 
-
-void I2C_Init(void) {
+void I2C_Init() {
     hi2c.Instance = I2C_1;
     hi2c.Init.Mode = HAL_I2C_MODE_MASTER;
 
@@ -144,6 +143,4 @@ void I2C_Init(void) {
     hi2c.Clock.SCLH  = 9;
     hi2c.Clock.SCLDEL = 3;
     hi2c.Clock.SDADEL = 1;
-
-
 }

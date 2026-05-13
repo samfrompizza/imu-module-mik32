@@ -42,6 +42,7 @@ add_library(mik32_hal
     mik32-hal/peripherals/Source/mik32_hal.c
     mik32-hal/utilities/Source/mik32_hal_spifi_w25.c
     mik32-hal/utilities/Source/mik32_hal_ssd1306.c
+    mik32-hal/utilities/Source/mik32_hal_ssd1306_fonts.c
 )
 
 target_include_directories(mik32_hal
@@ -51,6 +52,11 @@ target_include_directories(mik32_hal
     PRIVATE
         mik32-hal/core/Include
         mik32-hal/utilities/Include
+)
+
+target_compile_definitions(mik32_hal
+    PUBLIC
+        SSD1306_INCLUDE_FONT_16x24
 )
 
 target_link_libraries(mik32_hal
