@@ -4,6 +4,7 @@ set(APP_NAME ${CMAKE_PROJECT_NAME})
 add_executable(${APP_NAME}
     main.c
     crt.S
+    drivers/bno055_port.c
 )
 
 target_include_directories(${APP_NAME} PUBLIC
@@ -13,6 +14,7 @@ target_include_directories(${APP_NAME} PUBLIC
 target_link_libraries(${APP_NAME}
     PRIVATE
         mik32_hal
+        bno055
 )
 
 target_link_directories(${APP_NAME}

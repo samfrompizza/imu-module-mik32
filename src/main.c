@@ -9,6 +9,8 @@
 #include "scr1_timer.h"
 #include "drivers/board_config.h"
 #include "../hardware/mik32-hal/utilities/Include/mik32_hal_ssd1306_fonts.h"
+#include "../lib/BNO055_SensorAPI/bno055.h"
+#include "drivers/bno055_port.h"
 
 static void SystemClock_Config();
 static void GPIO_Init();
@@ -16,6 +18,13 @@ static void I2C_Init();
 void SPI_Init(SPI_HandleTypeDef *spi);
 static void DMA_Init();
 void display_Init();
+void BNO055_Init();
+
+void BNO055_delay_msek(u32 msek);
+s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt);
+s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt);
+
+void itoa_hex_u8(uint8_t val, char *str);
 
 SPI_HandleTypeDef spi;
 I2C_HandleTypeDef hi2c;
@@ -29,22 +38,61 @@ static DMA_InitTypeDef dma_init_struct = {0};
 int main() {
     SystemClock_Config();
     GPIO_Init();
+
     I2C_Init();
+    HAL_I2C_Init(&hi2c);
+
     display_Init();
     DMA_Init();
     SPI_Init(&spi);
     display.hdmatx = &hdma_spi_tx;  // Link DMA channel to display handle
 
+    BNO055_Init();
+
     ssd1306_Init(&display, 10);
     ssd1306_Fill(&display, Black);
 
-    while (1) {
-        char str[] = "abobus  ";
+    uint8_t chip_id = 0;
+    if (bno055_read_chip_id(&chip_id) == BNO055_SUCCESS) {
+        char str[5];
+        itoa_hex_u8(chip_id, str);
         ssd1306_WriteString(&display, str, Font_16x24, White);
         ssd1306_UpdateScreen(&display);
     }
 
+    while (1) {
+        HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_HIGH);
+        HAL_DelayMs(500);
+        HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_LOW);
+        HAL_DelayMs(500);
+    }
+
     return 0;
+}
+
+void BNO055_Init() {
+    struct bno055_t bno055;
+    bno055.bus_write = BNO055_I2C_bus_write;
+    bno055.bus_read  = BNO055_I2C_bus_read;
+    bno055.delay_msec = BNO055_delay_msek;
+    bno055.dev_addr = BNO055_I2C_ADDR2;
+
+    if (bno055_init(&bno055) != BNO055_SUCCESS) {
+        HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_HIGH);
+        while (1);
+    }
+
+    bno055_set_operation_mode(BNO055_OPERATION_MODE_NDOF);
+    BNO055_delay_msek(10);
+}
+
+void itoa_hex_u8(uint8_t val, char *str) {
+    const char hex_chars[] = "0123456789ABCDEF";
+    str[0] = '0';
+    str[1] = 'x';
+    str[2] = hex_chars[(val >> 4) & 0x0F];
+    str[3] = hex_chars[val & 0x0F];
+    str[4] = '\0';
 }
 
 void display_Init() {
@@ -141,6 +189,6 @@ void I2C_Init() {
     hi2c.Clock.PRESC = 1;
     hi2c.Clock.SCLL  = 19;
     hi2c.Clock.SCLH  = 9;
-    hi2c.Clock.SCLDEL = 3;
-    hi2c.Clock.SDADEL = 1;
+    hi2c.Clock.SCLDEL = 4;
+    hi2c.Clock.SDADEL = 3;
 }

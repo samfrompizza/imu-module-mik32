@@ -7,3 +7,4 @@ enable_language(C CXX ASM)
 
 add_subdirectory(hardware)
 add_subdirectory(src)
+add_subdirectory(lib/BNO055_SensorAPI)
