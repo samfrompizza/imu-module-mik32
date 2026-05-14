@@ -18,4 +18,7 @@
 #define OLED_CS_PIN (GPIO_PIN_10)
 #define OLED_CS_PORT (GPIO_0)
 
+#define BTN_PIN_NUM (8)
+#define BTN_PIN_PORT GPIO_0
+
 #endif

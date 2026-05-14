@@ -62,10 +62,10 @@ int main() {
     }
 
     while (1) {
-        HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_HIGH);
-        HAL_DelayMs(500);
-        HAL_GPIO_WritePin(GPIO_2, GPIO_PIN_7, GPIO_PIN_LOW);
-        HAL_DelayMs(500);
+        if ((BTN_PIN_PORT->STATE) & (1 << BTN_PIN_NUM)){
+            GPIO_2->OUTPUT ^= (GPIO_PIN_7);
+            HAL_DelayMs(500);
+        }
     }
 
     return 0;
