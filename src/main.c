@@ -30,6 +30,7 @@ SPI_HandleTypeDef spi;
 I2C_HandleTypeDef hi2c;
 USART_HandleTypeDef husart0; 
 HAL_SSD1306_HandleTypeDef display;
+static struct bno055_t bno055;
 
 // DMA handle for SPI
 DMA_ChannelHandleTypeDef hdma_spi_tx;
@@ -71,7 +72,6 @@ int main() {
 }
 
 void BNO055_Init() {
-    struct bno055_t bno055;
     bno055.bus_write = BNO055_I2C_bus_write;
     bno055.bus_read  = BNO055_I2C_bus_read;
     bno055.delay_msec = BNO055_delay_msek;
@@ -83,7 +83,7 @@ void BNO055_Init() {
     }
 
     bno055_set_operation_mode(BNO055_OPERATION_MODE_NDOF);
-    BNO055_delay_msek(10);
+    BNO055_delay_msek(50);
 }
 
 void itoa_hex_u8(uint8_t val, char *str) {
