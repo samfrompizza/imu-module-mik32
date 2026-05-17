@@ -10,12 +10,6 @@
 #define DEBUG_LINE0_Y (0)
 #define DEBUG_MAX_LINE_LEN (22)
 
-static char *append_char(char *p, char c)
-{
-    *p++ = c;
-    return p;
-}
-
 static char *append_string(char *p, const char *s)
 {
     while (*s)
