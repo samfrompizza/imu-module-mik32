@@ -57,6 +57,7 @@ target_include_directories(mik32_hal
 target_compile_definitions(mik32_hal
     PUBLIC
         SSD1306_INCLUDE_FONT_16x24
+        SSD1306_INCLUDE_FONT_11x18
 )
 
 target_link_libraries(mik32_hal
