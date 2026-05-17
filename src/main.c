@@ -21,12 +21,12 @@ I2C_HandleTypeDef hi2c;
 static DMA_InitTypeDef dma_init_struct = {0};
 static DMA_ChannelHandleTypeDef hdma_spi_tx;
 
-static inline void cpu_wait_for_interrupt(void)
+static inline void cpu_wait_for_interrupt()
 {
     __asm__ volatile("wfi");
 }
 
-static void system_clock_init(void)
+static void system_clock_init()
 {
     PCC_InitTypeDef cfg = {0};
     cfg.OscillatorEnable = PCC_OSCILLATORTYPE_ALL;
@@ -43,7 +43,7 @@ static void system_clock_init(void)
     HAL_PCC_Config(&cfg);
 }
 
-static void gpio_clocks_init(void)
+static void gpio_clocks_init()
 {
     __HAL_PCC_GPIO_0_CLK_ENABLE();
     __HAL_PCC_GPIO_1_CLK_ENABLE();
@@ -51,7 +51,7 @@ static void gpio_clocks_init(void)
     __HAL_PCC_GPIO_IRQ_CLK_ENABLE();
 }
 
-static void i2c_init(void)
+static void i2c_init()
 {
     hi2c.Instance = I2C_1;
     hi2c.Init.Mode = HAL_I2C_MODE_MASTER;
@@ -66,7 +66,7 @@ static void i2c_init(void)
     HAL_I2C_Init(&hi2c);
 }
 
-static void spi_init(void)
+static void spi_init()
 {
     spi.Instance = SPI_PORT;
     spi.Init.SPI_Mode = HAL_SPI_MODE_MASTER;
@@ -79,7 +79,7 @@ static void spi_init(void)
     HAL_SPI_Init(&spi);
 }
 
-static void dma_for_spi_init(void)
+static void dma_for_spi_init()
 {
     dma_init_struct.Instance = (DMA_CONFIG_TypeDef *)DMA_CONFIG;
     HAL_DMA_Init(&dma_init_struct);
@@ -100,7 +100,7 @@ static void dma_for_spi_init(void)
     HAL_DMA_ChannelEnable(&hdma_spi_tx);
 }
 
-static void heartbeat_led_init(void)
+static void heartbeat_led_init()
 {
     GPIO_InitTypeDef io = {0};
     io.Pin = GPIO_PIN_7;
@@ -118,7 +118,7 @@ void configure_interrupts()
     HAL_IRQ_EnableInterrupts();
 }
 
-int main(void)
+int main()
 {
     system_clock_init();
     gpio_clocks_init();
@@ -164,7 +164,6 @@ int main(void)
             if (button_take_press())
             {
                 mode_manager_handle_button();
-                HAL_DelayMs(300);
             }
             mode_manager_render(display_service_handle(), imu_service_get());
             display_service_flush();

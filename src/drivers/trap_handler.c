@@ -2,7 +2,7 @@
 #include "mik32_hal_timer32.h"
 #include "timer_service.h"
 
-void trap_handler(void)
+void trap_handler()
 {
     if (EPIC_CHECK_TIMER32_1())
     {

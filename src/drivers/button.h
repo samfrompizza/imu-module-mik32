@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 
-#define BUTTON_DEBOUNCE_SAMPLES   (3U)
+#define BUTTON_DEBOUNCE_SAMPLES (3U)
 
-void button_init(void);
-void button_sample(void);
-bool button_take_press(void);
+void button_init();
+void button_sample();
+bool button_take_press();
 
 #endif

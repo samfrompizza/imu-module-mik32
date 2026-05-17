@@ -29,7 +29,7 @@ static void timer_base_configure(TIMER32_HandleTypeDef *t,
     HAL_Timer32_Init(t);
 }
 
-void timer_service_init(void)
+void timer_service_init()
 {
     timer_base_configure(&s_imu_timer,
                          TIMER32_1,
@@ -45,7 +45,7 @@ void timer_service_init(void)
     HAL_Timer32_Base_Start_IT(&s_disp_timer);
 }
 
-bool timer_service_take_imu_tick(void)
+bool timer_service_take_imu_tick()
 {
     if (s_imu_tick_pending)
     {
@@ -55,7 +55,7 @@ bool timer_service_take_imu_tick(void)
     return false;
 }
 
-bool timer_service_take_display_tick(void)
+bool timer_service_take_display_tick()
 {
     if (s_display_tick_pending)
     {
@@ -65,15 +65,15 @@ bool timer_service_take_display_tick(void)
     return false;
 }
 
-TIMER32_HandleTypeDef *timer_service_imu_handle(void) { return &s_imu_timer; }
-TIMER32_HandleTypeDef *timer_service_display_handle(void) { return &s_disp_timer; }
+TIMER32_HandleTypeDef *timer_service_imu_handle() { return &s_imu_timer; }
+TIMER32_HandleTypeDef *timer_service_display_handle() { return &s_disp_timer; }
 
-void timer_service_isr_on_imu_tick(void)
+void timer_service_isr_on_imu_tick()
 {
     s_imu_tick_pending = 1;
 }
 
-void timer_service_isr_on_display_tick(void)
+void timer_service_isr_on_display_tick()
 {
     button_sample();
     s_display_tick_pending = 1;

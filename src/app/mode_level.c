@@ -83,7 +83,7 @@ static void draw_clipped_line(HAL_SSD1306_HandleTypeDef *display,
                  White);
 }
 
-static void level_enter(void) {}
+static void level_enter() {}
 
 static void level_render(HAL_SSD1306_HandleTypeDef *display,
                          const imu_frame_t *frame)
