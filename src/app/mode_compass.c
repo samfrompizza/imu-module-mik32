@@ -96,8 +96,8 @@ static void compass_render(HAL_SSD1306_HandleTypeDef *display,
     }
 
     float h = frame->heading_rad;
-    float du = -sinf(h);
-    float dv = -cosf(h);
+    float du = sinf(h);
+    float dv = cosf(h);
 
     int tip_u = DISPLAY_CENTER_U + round_to_int(du * COMPASS_ARROW_LENGTH);
     int tip_v = DISPLAY_CENTER_V + round_to_int(dv * COMPASS_ARROW_LENGTH);
